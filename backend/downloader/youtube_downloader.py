@@ -1,39 +1,27 @@
-import yt_dlp
 import os
 import uuid
+from yt_dlp import YoutubeDL
 
+def download_audio(url):
+    os.makedirs("downloads", exist_ok=True)
 
-def download_audio(youtube_url: str) -> str:
-    output_dir = "downloads"
-    os.makedirs(output_dir, exist_ok=True)
-
-    output_path = os.path.join(output_dir, f"{uuid.uuid4()}.%(ext)s")
+    filename = f"{uuid.uuid4()}.mp3"
+    output_path = os.path.join("downloads", filename)
 
     ydl_opts = {
         "format": "bestaudio/best",
-        "outtmpl": output_path,
-        "noplaylist": True,
-        "quiet": True,
-        "merge_output_format": "mp3",
+        "outtmpl": output_path.replace(".mp3", ".%(ext)s"),
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "mp3",
-                "preferredquality": "192",
             }
         ],
-        "nocheckcertificate": True,
-        "ignoreerrors": True,
-        "retries": 5,
-        "fragment_retries": 5,
-        "continuedl": False,
-        "http_headers": {
-            "User-Agent": "Mozilla/5.0"
-        },
+        "quiet": True,
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(youtube_url, download=True)
-        filename = ydl.prepare_filename(info)
+    with YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        ext = info["ext"]
 
-        return filename.replace(".webm", ".mp3").replace(".m4a", ".mp3")
+    return output_path.replace(".mp3", f".{ext}")
